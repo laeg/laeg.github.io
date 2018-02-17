@@ -1,0 +1,747 @@
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="../assets/built/screen.css?v=b0162d2131">
+
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="canonical" href="index.html">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <link rel="amphtml" href="amp/index.html">
+    
+    <meta property="og:site_name" content="rambles">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker">
+    <meta property="og:description" content="Learn how to test SAM architecture using AWS Lambda functions to retrieve data from Neo4j, all with Docker! ">
+    <meta property="og:url" content="http://localhost:2368/sam-neo4j-lambda-docker/">
+    <meta property="og:image" content="http://localhost:2368/content/images/2018/02/tim-mossholder-191483.jpg">
+    <meta property="article:published_time" content="2018-02-16T20:00:00.000Z">
+    <meta property="article:modified_time" content="2018-02-17T10:30:26.000Z">
+    <meta property="article:tag" content="Neo4j">
+    <meta property="article:tag" content="SAM">
+    <meta property="article:tag" content="Serverless Application Model">
+    <meta property="article:tag" content="Docker">
+    <meta property="article:tag" content="AWS">
+    <meta property="article:tag" content="Lambda">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker">
+    <meta name="twitter:description" content="Learn how to test SAM architecture using AWS Lambda functions to retrieve data from Neo4j, all with Docker! ">
+    <meta name="twitter:url" content="http://localhost:2368/sam-neo4j-lambda-docker/">
+    <meta name="twitter:image" content="http://localhost:2368/content/images/2018/02/tim-mossholder-191483.jpg">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Luke Gannon">
+    <meta name="twitter:label2" content="Filed under">
+    <meta name="twitter:data2" content="Neo4j, SAM, Serverless Application Model, Docker, AWS, Lambda">
+    <meta name="twitter:site" content="@laexample">
+    <meta property="og:image:width" content="7200">
+    <meta property="og:image:height" content="4800">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "rambles",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "http://localhost:2368/favicon.ico",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Luke Gannon",
+        "url": "http://localhost:2368/author/luke/",
+        "sameAs": []
+    },
+    "headline": "Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker",
+    "url": "http://localhost:2368/sam-neo4j-lambda-docker/",
+    "datePublished": "2018-02-16T20:00:00.000Z",
+    "dateModified": "2018-02-17T10:30:26.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "http://localhost:2368/content/images/2018/02/tim-mossholder-191483.jpg",
+        "width": 7200,
+        "height": 4800
+    },
+    "keywords": "Neo4j, SAM, Serverless Application Model, Docker, AWS, Lambda",
+    "description": "Learn how to test SAM architecture using AWS Lambda functions to retrieve data from Neo4j, all with Docker! ",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "http://localhost:2368/"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 1.21">
+    <link rel="alternate" type="application/rss+xml" title="rambles" href="../rss/index.html">
+
+</head>
+<body class="post-template tag-neo4j tag-sam tag-serverless-application-model tag-docker tag-aws tag-lambda">
+
+    <div class="site-wrapper">
+
+        
+
+<header class="site-header outer">
+    <div class="inner">
+        <nav class="site-nav">
+    <div class="site-nav-left">
+                <a class="site-nav-logo" href="http://localhost:2368">rambles</a>
+            <ul class="nav" role="menu">
+    <li class="nav-home" role="menuitem"><a href="http://localhost:2368/">Home</a></li>
+</ul>
+
+    </div>
+    <div class="site-nav-right">
+        <div class="social-links">
+                <a class="social-link social-link-tw" href="https://twitter.com/laexample" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M30.063 7.313c-.813 1.125-1.75 2.125-2.875 2.938v.75c0 1.563-.188 3.125-.688 4.625a15.088 15.088 0 0 1-2.063 4.438c-.875 1.438-2 2.688-3.25 3.813a15.015 15.015 0 0 1-4.625 2.563c-1.813.688-3.75 1-5.75 1-3.25 0-6.188-.875-8.875-2.625.438.063.875.125 1.375.125 2.688 0 5.063-.875 7.188-2.5-1.25 0-2.375-.375-3.375-1.125s-1.688-1.688-2.063-2.875c.438.063.813.125 1.125.125.5 0 1-.063 1.5-.25-1.313-.25-2.438-.938-3.313-1.938a5.673 5.673 0 0 1-1.313-3.688v-.063c.813.438 1.688.688 2.625.688a5.228 5.228 0 0 1-1.875-2c-.5-.875-.688-1.813-.688-2.75 0-1.063.25-2.063.75-2.938 1.438 1.75 3.188 3.188 5.25 4.25s4.313 1.688 6.688 1.813a5.579 5.579 0 0 1 1.5-5.438c1.125-1.125 2.5-1.688 4.125-1.688s3.063.625 4.188 1.813a11.48 11.48 0 0 0 3.688-1.375c-.438 1.375-1.313 2.438-2.563 3.188 1.125-.125 2.188-.438 3.313-.875z"></path></svg>
+</a>
+        </div>
+            <a class="rss-button" href="https://feedly.com/i/subscription/feed/http://localhost:2368/rss/" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"><circle cx="6.18" cy="17.82" r="2.18"></circle><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"></path></svg>
+</a>
+    </div>
+</nav>
+    </div>
+</header>
+
+
+<main id="site-main" class="site-main outer" role="main">
+    <div class="inner">
+
+        <article class="post-full post tag-neo4j tag-sam tag-serverless-application-model tag-docker tag-aws tag-lambda ">
+
+            <header class="post-full-header">
+                <section class="post-full-meta">
+                    <time class="post-full-meta-date" datetime="2018-02-16">16 February 2018</time>
+                        <span class="date-divider">/</span> <a href="../tag/neo4j/">Neo4j</a>
+                </section>
+                <h1 class="post-full-title">Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker</h1>
+            </header>
+
+            <figure class="post-full-image" style="background-image: url(../content/images/2018/02/tim-mossholder-191483.jpg)">
+            </figure>
+
+            <section class="post-full-content">
+                <div class="kg-card-markdown"><h1 id="testingyouramazonserverlessapplicationmodelsamlocallywithneo4jlambdaanddocker">Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker</h1>
+<p>So this is what I want to achieve. You should be able to do the same by the end of the post:</p>
+<ul>
+<li>[ ] Install Docker</li>
+<li>[ ] Install NPM</li>
+<li>[ ] Create Neo4j Docker container</li>
+<li>[ ] Docker Network to allow containers to talk to each other</li>
+<li>[ ] Install SAM Local (beta)</li>
+<li>[ ] Create template.yaml
+<ul>
+<li>[ ] Python</li>
+<li>[ ] JavaScript</li>
+<li>[ ] Java</li>
+</ul>
+</li>
+<li>[ ] Create test handler
+<ul>
+<li>[ ] Invoke driver
+<ul>
+<li>[ ] Talk about possible problems and how expensive it is to invoke drives?</li>
+</ul>
+</li>
+<li>[ ] Run read query
+<ul>
+<li>[ ] Link to driver pages and different queries and transactions</li>
+<li>[ ] Why we won’t close off the connection in case our lambda is reused</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] Test Lambda function</li>
+</ul>
+<h1 id="installdocker">Install Docker</h1>
+<p><a href="http://lmgtfy.com/?q=install+docker+on+windows/linux/mac">http://lmgtfy.com/?q=install+docker+on+windows/linux/mac</a></p>
+<p><a href="https://docs.docker.com/install/">Install Docker | Docker Documentation</a></p>
+<p>If you’re on a mac:</p>
+<ol>
+<li>
+<p><code>cmd+space</code> to bring up Spotlight Search, type <code>terminal</code> and press <code>enter</code></p>
+</li>
+<li>
+<p>Install Homebrew</p>
+</li>
+</ol>
+<pre><code class="language-bash">$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+</code></pre>
+<ol start="3">
+<li>Update Homebrew</li>
+</ol>
+<pre><code class="language-bash">$ brew update
+</code></pre>
+<ol start="4">
+<li>Install Docker via Homebrew</li>
+</ol>
+<pre><code class="language-bash">$ brew cask install docker
+</code></pre>
+<ol start="5">
+<li><code>cmd+space</code> to bring up Spotlight Search, type <code>docker</code> and press <code>enter</code>
+<ul>
+<li>When it starts up, it’ll create everything in the following location</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-bash">$ ls -l /usr/local/bin/docker*
+lrwxr-xr-x  1 laexample  domain Users  67 Apr 12 14:14 /usr/local/bin/docker -&gt; /Users/laexample/Library/Group Containers/group.com.docker/bin/docker
+lrwxr-xr-x  1 laexample  domain Users  75 Apr 12 14:14 /usr/local/bin/docker-compose -&gt; /Users/laexample/Library/Group Containers/group.com.docker/bin/docker-compose
+lrwxr-xr-x  1 laexample  domain Users  90 Apr 12 14:14 /usr/local/bin/docker-credential-osxkeychain -&gt; /Users/laexample/Library/Group Containers/group.com.docker/bin/docker-credential-osxkeychain
+lrwxr-xr-x  1 laexample  domain Users  75 Apr 12 14:14 /usr/local/bin/docker-machine -&gt; /Users/laexample/Library/Group Containers/group.com.docker/bin/docker-machine
+</code></pre>
+<ol start="6">
+<li>Validate version</li>
+</ol>
+<pre><code class="language-bash">$ docker version
+</code></pre>
+<ul>
+<li>[x] Install Docker</li>
+</ul>
+<h1 id="installnpm">Install NPM</h1>
+<p><a href="http://lmgtfy.com/?q=install+npm+on+windows/linux/mac">http://lmgtfy.com/?q=install+npm+on+windows/linux/mac</a><br>
+<a href="https://docs.docker.com/install/">Install Docker | Docker Documentation</a></p>
+<p><a href="https://nodejs.org/en/download/">Download | Node.js</a></p>
+<ol start="7">
+<li>Install Node / NPM</li>
+</ol>
+<pre><code class="language-bash">$ brew install node
+</code></pre>
+<ol start="8">
+<li>Validate Node and NPM</li>
+</ol>
+<pre><code class="language-bash">$ node -v 
+$ npm -v
+</code></pre>
+<ul>
+<li>[x] Install NPM</li>
+</ul>
+<h1 id="createneo4jdockercontainer">Create Neo4j Docker container</h1>
+<p>So we have docker installed, NPM will be used later but now I want to get Neo4j up and running.</p>
+<h2 id="neo4jbyversiondockerscript">Neo4j (by version) Docker Script</h2>
+<ol start="9">
+<li>Create executable and file<br>
+Paste the following docker run command into an executable file like: <strong><code>neo4j-docker.sh</code></strong></li>
+</ol>
+<pre><code class="language-bash">if [ ! -d "$HOME/neo4j/databases/$1/" ]; then
+	echo "Making directory structure"
+  mkdir -p $HOME/neo4j/databases/$1/{data,plugins,import,logs,conf}
+	echo "Downloading APOC"
+curl -o $HOME/neo4j/databases/$1/plugins/apoc-3.3.0.1-all.jar https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/3.3.0.1/apoc-3.3.0.1-all.jar
+	echo "Docker Run"
+fi
+
+docker run \
+--publish=7474:7474 \
+--publish=7687:7687 \
+--volume=$HOME/neo4j/databases/$1/data:/data \
+--volume=$HOME/neo4j/databases/$1/plugins:/plugins \
+--volume=$HOME/neo4j/databases/$1/import:/import \
+--volume=$HOME/neo4j/databases/$1/logs:/logs \
+--env=NEO4J_dbms_memory_pagecache_size=2G \
+--env=NEO4J_dbms_memory_heap_maxSize=4096m \
+--env=NEO4J_AUTH=none \
+--env=NEO4J_dbms_security_procedures_unrestricted=apoc.\\\* \
+--env=NEO4J_ACCEPT_LICENSE_AGREEMENT=yes \
+--ulimit=nofile=40000:40000 \
+neo4j:$1-enterprise
+</code></pre>
+<p><em>So what does it do?</em></p>
+<ul>
+<li>If the version directory doesn’t exist:
+<ul>
+<li>Create the version folder in <code>$HOME/neo4j/databases/&lt;version&gt;</code></li>
+<li>Create folders to be mapped to the local machine</li>
+<li>Download APOC into the plugins folder</li>
+</ul>
+</li>
+<li>Download and run a Docker container and start Neo4j
+<ul>
+<li>Localhost ports <code>7474</code> &amp; <code>7687</code> are mapped to your the container so you can get access to:
+<ul>
+<li>Browser/HTTP (7474)
+<ul>
+<li>go check it out: <a href="../">http://localhost:7474</a></li>
+</ul>
+</li>
+<li>BOLT (7687)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>It’s best practise to use either env variables or map the config directory</strong><br>
+Add the following line in and remove all <code>—env</code> lines.</p>
+<pre><code class="language-bash">--volume=$HOME/neo4j/databases/$1/import:/import \
+</code></pre>
+<ol start="10">
+<li>Change executable permissions</li>
+</ol>
+<pre><code class="language-bash">$ chmod +x neo4j-docker.sh
+</code></pre>
+<p>So we can create different docker containers with different versions of Neo4j by running a command similar to <code>./neo4j-docker.sh &lt;version&gt;</code></p>
+<ol start="11">
+<li>Start <strong><code>Neo4j</code></strong> <strong><code>Docker</code></strong> Container</li>
+</ol>
+<pre><code class="language-bash">$ ./neo4j-docker.sh 3.3.2
+</code></pre>
+<ol start="12">
+<li>Head over to <a href="../">http://localhost:7474</a> and create some data:</li>
+</ol>
+<pre><code class="language-cypher">CREATE (p:Person{ name: "Luke"}),
+       (p2:Person {name:"Mel"}),
+       (p)-[pris_m:IS_MARRIED_TO]-&gt;(p2)
+</code></pre>
+<ol start="13">
+<li>Test our query we want to use later:</li>
+</ol>
+<pre><code class="language-cypher">MATCH (p:Person{ name: "Luke"})-[pris_m:IS_MARRIED_TO]-&gt;(p2)
+RETURN p.name, pris_m.since
+</code></pre>
+<ul>
+<li>[x] Create Neo4j Docker container</li>
+</ul>
+<h1 id="installsamlocalbeta">Install SAM Local (beta)</h1>
+<ol start="13">
+<li>Install <strong><code>SAM</code></strong> with <strong><code>NPM</code></strong></li>
+</ol>
+<pre><code class="language-bash">$ npm install -g aws-sam-local
+</code></pre>
+<p>Verify the installation worked:</p>
+<pre><code class="language-bash">$ sam --version
+</code></pre>
+<p>If you get a permission error when using <strong><code>NPM</code></strong> (such as <code>EACCES: permission denied</code>), please see the instructions on this page of the NPM documentation: <a href="https://docs.npmjs.com/getting-started/fixing-npm-permissions">https://docs.npmjs.com/getting-started/fixing-npm-permissions</a>.</p>
+<h5 id="upgradingvianpm">Upgrading via npm</h5>
+<p>To update <strong><code>SAM</code></strong> once installed via <strong><code>NPM</code></strong>:</p>
+<pre><code class="language-bash">$ npm update -g aws-sam-local
+</code></pre>
+<ul>
+<li>[x] Install SAM Local (beta)</li>
+</ul>
+<h1 id="containertalkdockernetwork">Container Talk - Docker Network</h1>
+<p>In order to get our containers (SAM Local and Neo4j) speaking to each other, we need to create a network which they will share:</p>
+<ol start="12">
+<li>Create a network</li>
+</ol>
+<pre><code class="language-bash">docker network create {network-name}
+</code></pre>
+<p>Now let's connect the neo4j we started running before to the network.<br>
+We'll need it's container id or name:</p>
+<ol start="13">
+<li>Get the container ID or name</li>
+</ol>
+<pre><code class="language-bash">docker ps
+</code></pre>
+<p>Use the network you created and the <strong><code>neo4j</code></strong> container name</p>
+<ol start="14">
+<li>Connect the Neo4j container to the network</li>
+</ol>
+<pre><code class="language-bash">docker network connect {network-name} {neo4j-container-id/name}
+</code></pre>
+<p>Now lets find the IP address for the <strong><code>neo4j</code></strong> container, use that in your code.</p>
+<ol start="15">
+<li>Get Neo4j container IP</li>
+</ol>
+<pre><code class="language-bash">docker inspect {neo4j-container-id} 
+</code></pre>
+<p>At the bottom of the page you’ll find within the Array of JSON objects, a “NetworkSettings” object, you’ll want <code>NetworkSettings.Networks.{network-name}</code></p>
+<ul>
+<li>[x] Docker Network to allow containers to talk to each other</li>
+</ul>
+<h1 id="createtemplateyaml">Create template.yaml</h1>
+<p><strong>What does a template.yaml file need?</strong></p>
+<ul>
+<li>[ ] Create template.yaml</li>
+</ul>
+<h2 id="python">Python</h2>
+<pre><code class="language-yaml">AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: My first serverless application.
+Resources:
+  GraphHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main.lambda_handler
+      Runtime: python3.6
+      CodeUri: .
+      Timeout: 10
+</code></pre>
+<pre><code>- [ ] Python
+</code></pre>
+<h2 id="javascript">JavaScript</h2>
+<pre><code class="language-yaml">AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: My first serverless application.
+Resources:
+  GraphHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: .
+      Timeout: 10
+</code></pre>
+<pre><code>- [ ] JavaScript
+</code></pre>
+<h2 id="java">Java</h2>
+<pre><code class="language-yaml">AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Writing my first serverless application.
+Resources:
+  GraphHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.nineteen.neo4j.GraphHandler
+      CodeUri: ./target/lambda-1.0-jar-with-dependencies.jar
+      Runtime: java8
+      Timeout: 999
+</code></pre>
+<p>Note: you have to provide the path of the compiled jar.<br>
+- [ ] Java</p>
+<h2 id="dotnetcore"><s>dotNetCore</s></h2>
+<p>Unfortunately we’re waiting for the SAM  team to support .NetCore, sorry <a href="http://localhost:2368/sam-neo4j-lambda-docker/twitter.com/cskardon">Chris Skardon</a> :sadparrot:</p>
+<h1 id="createtesthandler">Create Test Handler</h1>
+<h2 id="python">Python</h2>
+<p>Within main.py paste the following:</p>
+<pre><code class="language-python">import null;
+
+#TODO: Pad this out a bit
+def lambda_handler(event, context):
+    return ""
+</code></pre>
+<pre><code>- [ ] Python
+</code></pre>
+<h2 id="javascript">JavaScript</h2>
+<pre><code class="language-javascript">'use strict';
+
+exports.handler = (event, context, callback) =&gt; {
+    console.log(event);
+}
+</code></pre>
+<p>Props to @AdamCowley’s and his mad javascript skills. I don’t like being tortured by languages.<br>
+- [ ] JavaScript</p>
+<h2 id="java">Java</h2>
+<pre><code class="language-java">package com.nineteen.neo4j.example;
+
+import com.amazonaws.services.lambda.runtime.Context;
+
+private Driver driver;
+
+public class Hello {
+
+    public String myHandler(String name, Context context) {
+
+        System.out.println("log data to cloudwatch from stdout");
+        System.err.println("log data tp cloudwatch from stderr");
+        return String.format("Hello %s.", name);
+    }
+}  
+</code></pre>
+<pre><code>- [ ] Java
+</code></pre>
+<ul>
+<li>[ ] Create test handlers</li>
+</ul>
+<h2 id="invokedriver">Invoke driver</h2>
+<h2 id="java">Java</h2>
+<pre><code class="language-java">package com.nineteen.neo4j.example;
+
+import com.amazonaws.services.lambda.runtime.Context;
+
+public class Hello {
+	private Driver driver;
+	public String myHandler(String name, Context context) {
+		if (driver == null)
+		{
+			driver = GraphDatabase.driver("{URL_OF_NEO4J_CONTAINER}", AuthTokens.basic("neo4j", ""));
+		}
+    }
+}  
+</code></pre>
+<pre><code>- [ ] Java
+</code></pre>
+<ul>
+<li>[ ] Invoke Driver</li>
+</ul>
+<h3 id="talkaboutpossibleproblemsandhowexpensiveitistoinvokedrives">Talk about possible problems and how expensive it is to invoke drives?</h3>
+<h2 id="runreadquery">Run read query</h2>
+<ul>
+<li>[ ] Run read query</li>
+</ul>
+<h2 id="python">Python</h2>
+<pre><code class="language-python"></code></pre>
+<h2 id="javascript">JavaScript</h2>
+<pre><code class="language-javascript">'use strict';
+
+
+
+exports.handler = (event, context, callback) =&gt; {
+    const neo4j = require('neo4j-driver').v1;
+    const driver = new neo4j.driver('bolt://172.17.0.2:7687', neo4j.auth.basic('neo4j', 'neo') );
+
+    const session = driver.session();
+
+    session.run(`MATCH (p:Person{ id: {id} }),
+                (p)-[prlive:LIVES_AT]-&gt;(a:Address),
+                (p)-[pris_p:IS_PARTNER_OF]-&gt;(p2:Person),
+                (p2)-[p2ris_i:IS_IDENTIFIED_BY]-&gt;(g:GovID)
+        WHERE p.name= {p_name} AND prlive.since&gt; {prlive_since} AND a.addressLine1 = {addressLine1} AND p2.name = {p2_name}
+        RETURN p.name, a.postCode, p2.name as p2name, g.type`, params)
+        .then(res =&gt; {
+            console.log(res.records.length);
+
+            return res.records.map(row =&gt; {
+                return [ row.get('p.name'), row.get('a.postCode'), row.get('p2name'), row.get('g.type') ];
+            });
+        })
+        .then(json =&gt; {
+            session.close();
+
+            return json;
+        })
+        .then(json =&gt; {
+            console.log(json);
+
+            const end = new Date().getTime();
+
+            console.log('-- END',  end);
+            console.log('-- END', end - start);
+
+            callback(null, {
+                statusCode: 200,
+                headers: { "x-custom-header" : "my custom header value" },
+                body: json
+            });
+        })
+        .catch(e =&gt; {
+            callback(e);
+        })
+        .then(() =&gt; {
+            return driver.close();
+        });
+
+}
+</code></pre>
+<h2 id="java">## Java</h2>
+<pre><code class="language-java">package com.nineteen.neo4j.example;
+
+import com.amazonaws.services.lambda.runtime.Context;
+
+public class Hello {
+	private Driver driver;
+	public String myHandler(String name, Context context) {
+		if (driver == null)
+		{
+			driver = GraphDatabase.driver("{URL_OF_NEO4J_CONTAINER}", AuthTokens.basic("neo4j", ""));
+		}
+
+		try (Session session = driver.session(AccessMode.READ))
+      {
+			sr = session.run(query);
+			List&lt;Record&gt; resultList = sr.list();
+			//TODO: add return: return resultList;
+        }
+        catch (ClientException ce)
+        {
+            ce.printStackTrace();
+        }
+
+      //return String.format("Hello %s.", name);
+    }
+}  
+</code></pre>
+<h3 id="linktodriverpagesanddifferentqueriesandtransactions">Link to driver pages and different queries and transactions</h3>
+<h3 id="whywewontcloseofftheconnectionincaseourlambdaisreused">Why we won’t close off the connection in case our lambda is reused</h3>
+<ul>
+<li>[ ] Why we won’t close off the connection in case our lambda is reused</li>
+</ul>
+<h1 id="testlambdafunction">Test Lambda function</h1>
+<ul>
+<li>[ ] Test Lambda function</li>
+</ul>
+<p>Didn’t even break a sweat. <a href="https://www.youtube.com/watch?v=3M_5oYU-IsU">BIG SHAQ - MANS NOT HOT</a></p>
+<p>Links</p>
+<ul>
+<li><a href="https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md">serverless-application-model/2016-10-31.md at master · awslabs/serverless-application-model · GitHub</a></li>
+<li><a href="https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md">serverless-application-model/HOWTO.md at master · awslabs/serverless-application-model · GitHub</a></li>
+<li><a href="https://docs.aws.amazon.com/lambda/latest/dg/test-sam-local.html">Test Your Serverless Applications Locally Using SAM Local (Public Beta) - AWS Lambda</a></li>
+</ul>
+</div>
+            </section>
+
+
+            <footer class="post-full-footer">
+
+                <section class="author-card">
+                    <section class="author-card-content">
+                        <h4 class="author-card-name"><a href="../author/luke/">Luke Gannon</a></h4>
+                            <p>Read <a href="../author/luke/">more posts</a> by this author.</p>
+                    </section>
+                </section>
+                <div class="post-full-footer-right">
+                    <a class="author-card-button" href="../author/luke/">Read More</a>
+                </div>
+
+            </footer>
+
+
+        </article>
+
+    </div>
+</main>
+
+<aside class="read-next outer">
+    <div class="inner">
+        <div class="read-next-feed">
+<script>console.error("The {{get}} helper is not available. The Public API flag must be enabled in labs if you wish to use the {{get}} helper. See https://help.ghost.org/hc/en-us/articles/115000301672-Public-API-Beta");</script>
+
+                <article class="post-card post tag-mdm tag-pole tag-svp no-image">
+    <div class="post-card-content">
+        <a class="post-card-content-link" href="../mdm-pole-svp/">
+            <header class="post-card-header">
+                    <span class="post-card-tags">MDM</span>
+                <h2 class="post-card-title">MDM? POLE? SVP?</h2>
+            </header>
+            <section class="post-card-excerpt">
+                <p>My take on the world of modelling and managing master data, real world scenarios and what the hell is an Single View of Person</p>
+            </section>
+        </a>
+        <footer class="post-card-meta">
+            <span class="post-card-author"><a href="../author/luke/">Luke Gannon</a></span>
+        </footer>
+    </div>
+</article>
+
+        </div>
+    </div>
+</aside>
+
+<div class="floating-header">
+    <div class="floating-header-logo">
+        <a href="http://localhost:2368">
+            <span>rambles</span>
+        </a>
+    </div>
+    <span class="floating-header-divider">—</span>
+    <div class="floating-header-title">Testing your Amazon Serverless Application Model (SAM) locally with Neo4j, Lambda and Docker</div>
+    <div class="floating-header-share">
+        <div class="floating-header-share-label">Share this <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+    <path d="M7.5 15.5V4a1.5 1.5 0 1 1 3 0v4.5h2a1 1 0 0 1 1 1h2a1 1 0 0 1 1 1H18a1.5 1.5 0 0 1 1.5 1.5v3.099c0 .929-.13 1.854-.385 2.748L17.5 23.5h-9c-1.5-2-5.417-8.673-5.417-8.673a1.2 1.2 0 0 1 1.76-1.605L7.5 15.5zm6-6v2m-3-3.5v3.5m6-1v2"></path>
+</svg>
+</div>
+        <a class="floating-header-share-tw" href="https://twitter.com/share?text=Testing%20your%20Amazon%20Serverless%20Application%20Model%20(SAM)%20locally%20with%20Neo4j%2C%20Lambda%20and%20Docker&amp;url=http://localhost:2368/sam-neo4j-lambda-docker/" onclick="window.open(this.href, 'share-twitter', 'width=550,height=235');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M30.063 7.313c-.813 1.125-1.75 2.125-2.875 2.938v.75c0 1.563-.188 3.125-.688 4.625a15.088 15.088 0 0 1-2.063 4.438c-.875 1.438-2 2.688-3.25 3.813a15.015 15.015 0 0 1-4.625 2.563c-1.813.688-3.75 1-5.75 1-3.25 0-6.188-.875-8.875-2.625.438.063.875.125 1.375.125 2.688 0 5.063-.875 7.188-2.5-1.25 0-2.375-.375-3.375-1.125s-1.688-1.688-2.063-2.875c.438.063.813.125 1.125.125.5 0 1-.063 1.5-.25-1.313-.25-2.438-.938-3.313-1.938a5.673 5.673 0 0 1-1.313-3.688v-.063c.813.438 1.688.688 2.625.688a5.228 5.228 0 0 1-1.875-2c-.5-.875-.688-1.813-.688-2.75 0-1.063.25-2.063.75-2.938 1.438 1.75 3.188 3.188 5.25 4.25s4.313 1.688 6.688 1.813a5.579 5.579 0 0 1 1.5-5.438c1.125-1.125 2.5-1.688 4.125-1.688s3.063.625 4.188 1.813a11.48 11.48 0 0 0 3.688-1.375c-.438 1.375-1.313 2.438-2.563 3.188 1.125-.125 2.188-.438 3.313-.875z"></path></svg>
+        </a>
+        <a class="floating-header-share-fb" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/sam-neo4j-lambda-docker/" onclick="window.open(this.href, 'share-facebook','width=580,height=296');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 32 32"><path d="M19 6h5V0h-5c-3.86 0-7 3.14-7 7v3H8v6h4v16h6V16h5l1-6h-6V7c0-.542.458-1 1-1z"></path></svg>
+        </a>
+    </div>
+    <progress class="progress" value="0">
+        <div class="progress-container">
+            <span class="progress-bar"></span>
+        </div>
+    </progress>
+</div>
+
+
+
+
+        <footer class="site-footer outer">
+            <div class="site-footer-content inner">
+                <section class="copyright"><a href="http://localhost:2368">rambles</a> © 2018</section>
+                <nav class="site-footer-nav">
+                    <a href="http://localhost:2368">Latest Posts</a>
+                    
+                    <a href="https://twitter.com/laexample" target="_blank" rel="noopener">Twitter</a>
+                    <a href="https://ghost.org" target="_blank" rel="noopener">Ghost</a>
+                </nav>
+            </div>
+        </footer>
+
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous">
+    </script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=b0162d2131"></script>
+
+
+    <script>
+
+// NOTE: Scroll performance is poor in Safari
+// - this appears to be due to the events firing much more slowly in Safari.
+//   Dropping the scroll event and using only a raf loop results in smoother
+//   scrolling but continuous processing even when not scrolling
+$(document).ready(function () {
+    // Start fitVids
+    var $postContent = $(".post-full-content");
+    $postContent.fitVids();
+    // End fitVids
+
+    var progressBar = document.querySelector('progress');
+    var header = document.querySelector('.floating-header');
+    var title = document.querySelector('.post-full-title');
+
+    var lastScrollY = window.scrollY;
+    var lastWindowHeight = window.innerHeight;
+    var lastDocumentHeight = $(document).height();
+    var ticking = false;
+
+    function onScroll() {
+        lastScrollY = window.scrollY;
+        requestTick();
+    }
+
+    function onResize() {
+        lastWindowHeight = window.innerHeight;
+        lastDocumentHeight = $(document).height();
+        requestTick();
+    }
+
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(update);
+        }
+        ticking = true;
+    }
+
+    function update() {
+        var trigger = title.getBoundingClientRect().top + window.scrollY;
+        var triggerOffset = title.offsetHeight + 35;
+        var progressMax = lastDocumentHeight - lastWindowHeight;
+
+        // show/hide floating header
+        if (lastScrollY >= trigger + triggerOffset) {
+            header.classList.add('floating-active');
+        } else {
+            header.classList.remove('floating-active');
+        }
+
+        progressBar.setAttribute('max', progressMax);
+        progressBar.setAttribute('value', lastScrollY);
+
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', onScroll, {passive: true});
+    window.addEventListener('resize', onResize, false);
+
+    update();
+});
+</script>
+
+
+    
+
+</body>
